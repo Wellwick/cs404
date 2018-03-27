@@ -211,7 +211,32 @@ class BulwarkClient(object):
     def first_bidding_strategy(self, numberbidders, wincondition, artists, values, rd, itemsinauction, winnerarray, winneramount, mybidderid, players, standings, winnerpays):
         """Game 1: First to buy wincondition of any artist wins, highest bidder pays own bid, auction order known."""
         
+        totArtist = 0
+        artistValuation = {}
+        
+        for artist in artists:
+            artistValuation[artist] = 0
+            totArtist = totArtist + 1
+        
         curr_item = itemsinauction[rd]
+        
+        # Know the order of auctioned items, so we can bid on the ones we think are most likely to win for us early
+        for roundItem in itemsinauction[rd:]:
+            artistValuation[roundItem] += 1
+            if artistValuation[roundItem] - standings[mybidderid][roundItem] >= wincondition:
+                # This means we want to follow the path to this item type and ignore others
+                if curr_item != roundItem:
+                    return 0
+                # If we own 2 of this item already, we want to go all in
+                if standings[mybidderid][curr_item] == 2:
+                    return standings[mybidderid]['money']
+                # If we own 1 of these already, let's try spending half our money on it!
+                if standings[mybidderid][curr_item] == 1:
+                    return int(standings[mybidderid]['money']/2)
+                else:
+                    return int(standings[mybidderid]['money']/3)
+        
+        """
         # If we own 2 of this item already, we want to go all in
         if standings[mybidderid][curr_item] == 2:
             return standings[mybidderid]['money']
@@ -230,6 +255,7 @@ class BulwarkClient(object):
         
         # Will not be likely to beat random bots, because does not take into account what the item order is
         return 0
+        """
         
 
     def second_bidding_strategy(self, numberbidders, wincondition, artists, values, rd, itemsinauction, winnerarray, winneramount, mybidderid, players, standings, winnerpays):
