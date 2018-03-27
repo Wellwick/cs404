@@ -120,6 +120,8 @@ class AuctionClient(object):
                         winnerarray.append(None)
                         winneramount.append(0)
                     if x[0] == "winner":
+                        winnerarray.append(x[1])
+                        winneramount.append(int(x[3]))
                         self.standings[x[1]][currentitem] += 1
                         self.standings[x[1]]["money"] -= int(x[3])
             else:
