@@ -15,7 +15,7 @@ numitems = {}
 auction_size = 200
 budget = 1000
 values = {'Picasso': 1, 'Van_Gogh' : 5, 'Rembrandt' : 10, 'Da_Vinci' : 20}
-announce_order = True
+announce_order = False
 winner_pays = 0
 
 args = (HOST, ports, numbidders, neededtowin, itemtypes, numitems, auction_size, budget, values, announce_order, winner_pays

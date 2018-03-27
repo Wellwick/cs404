@@ -211,18 +211,18 @@ class BulwarkClient(object):
     def first_bidding_strategy(self, numberbidders, wincondition, artists, values, rd, itemsinauction, winnerarray, winneramount, mybidderid, players, standings, winnerpays):
         """Game 1: First to buy wincondition of any artist wins, highest bidder pays own bid, auction order known."""
         
-        totArtist = 0
         artistValuation = {}
         
         for artist in artists:
             artistValuation[artist] = 0
-            totArtist = totArtist + 1
         
         curr_item = itemsinauction[rd]
         
+        # TODO need to factor in previous buys from other bidders
         # Know the order of auctioned items, so we can bid on the ones we think are most likely to win for us early
         for roundItem in itemsinauction[rd:]:
             artistValuation[roundItem] += 1
+            # TODO Could find a way to factor in number of bidders 
             if artistValuation[roundItem] - standings[mybidderid][roundItem] >= wincondition:
                 # This means we want to follow the path to this item type and ignore others
                 if curr_item != roundItem:
@@ -236,33 +236,47 @@ class BulwarkClient(object):
                 else:
                     return int(standings[mybidderid]['money']/3)
         
-        """
-        # If we own 2 of this item already, we want to go all in
-        if standings[mybidderid][curr_item] == 2:
-            return standings[mybidderid]['money']
-        # If we own 1 of these already, let's try spending half our money on it!
-        if standings[mybidderid][curr_item] == 1:
-            return int(standings[mybidderid]['money']/2)
-        
-        ownItem = False
-        # Should only try and buy if we haven't bought anything else yet!
-        for artist, count in standings[mybidderid].iteritems():
-            if artist != 'money' and count > 0:
-                ownItem = True
-        
-        if ownItem == False:
-            return int(standings[mybidderid]['money']/3)
-        
-        # Will not be likely to beat random bots, because does not take into account what the item order is
-        return 0
-        """
-        
 
     def second_bidding_strategy(self, numberbidders, wincondition, artists, values, rd, itemsinauction, winnerarray, winneramount, mybidderid, players, standings, winnerpays):
         """Game 2: First to buy wincondition of any artist wins, highest bidder pays own bid, auction order not known."""
-
-        # Currently just returns a random bid
-        return self.random_bid(standings[mybidderid]['money'])
+        
+        # Don't have access to the order, so need to estimate for the ordering using previous items
+        # Also have access to total for the types in artists
+        
+        artistValuation = {}
+        
+        for artist in artists:
+            artistValuation[artist] = artists[artist]
+            
+        for roundItem in itemsinauction[:rd]:
+            artistValuation[roundItem] -= 1
+        
+        # Really, we want to value ones we've already got some of much higher!
+        for ownedItem in standings[mybidderid]:
+            if ownedItem != 'money':
+                artistValuation[ownedItem] *= (standings[mybidderid][ownedItem]+1)
+                
+        curr_item = itemsinauction[rd]
+        
+        # Make sure we are making the best choice
+        bestChoice = [curr_item, artistValuation[curr_item]]
+        for artist in artistValuation:
+            if artistValuation[artist] > bestChoice[1]:
+                bestChoice[0] = artist
+                bestChoice[1] = artistValuation[artist]
+                
+        # Now actually make the bid
+        if bestChoice[0] != curr_item:
+            return 0
+        else:
+            # If we own 2 of this item already, we want to go all in
+            if standings[mybidderid][curr_item] == 2:
+                return standings[mybidderid]['money']
+            # If we own 1 of these already, let's try spending half our money on it!
+            if standings[mybidderid][curr_item] == 1:
+                return int(standings[mybidderid]['money']/2)
+            else:
+                return int(standings[mybidderid]['money']/3)
 
     def third_bidding_strategy(self, numberbidders, wincondition, artists, values, rd, itemsinauction, winnerarray, winneramount, mybidderid, players, standings, winnerpays):
         """Game 3: Highest total value wins, highest bidder pays own bid, auction order known."""
