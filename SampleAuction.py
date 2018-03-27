@@ -1,7 +1,7 @@
 from multiprocessing import Process
 from AuctionClient import AuctionClient
 from AuctionServer import AuctionServer
-from TestClient import TestClient
+from BulwarkClient import BulwarkClient
 import time
 
 HOST = "localhost"
@@ -33,7 +33,7 @@ def run_auction(host, ports, numbidders, neededtowin, itemtypes, numitems, aucti
 
 def run_client(port, bidderid, verbose, test):
     if test:
-        bidbot =TestClient(port=port, mybidderid=bidderid, verbose=verbose)
+        bidbot = BulwarkClient(port=port, mybidderid=bidderid, verbose=verbose)
     else:
         bidbot = AuctionClient(port=port, mybidderid=bidderid, verbose=verbose)
     bidbot.play_auction()
@@ -48,7 +48,7 @@ if __name__=='__main__':
      for i in range(numbidders):
          p = ports + i
          if i < numtest:
-             name = "Test" + str(i+1)
+             name = "Bulwark" + str(i+1)
          else:
              name = "Bidbot" + str(i+1-numtest)
          print("Starting AuctionClient on port %d with name %s" % (p, name))
