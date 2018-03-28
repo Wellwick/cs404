@@ -211,7 +211,7 @@ class AuctionServer(object):
                 print("Everyone's out of cash! Game over!")
                 done = True
 
-        time.sleep(2)
+        #time.sleep(2)
         if self.neededtowin == 0:
             player_values = {}
             for name in self.standings:
