@@ -281,6 +281,36 @@ class BulwarkClient(object):
     def third_bidding_strategy(self, numberbidders, wincondition, artists, values, rd, itemsinauction, winnerarray, winneramount, mybidderid, players, standings, winnerpays):
         """Game 3: Highest total value wins, highest bidder pays own bid, auction order known."""
         
+        # Proof of concept, bidding on only the highest value item will get you to win
+        # Does work, even when occasionally losing the item
+        if mybidderid == "Bulwark3":
+            bestItem = ""
+            weakerItemValuation = 0
+            for artist in artists:
+                if bestItem == "":
+                    bestItem = artist
+                else:
+                    if values[bestItem] < values[artist]:
+                        weakerItemValuation += values[bestItem]
+                        bestItem = artist
+                    else:
+                        weakerItemValuation += values[artist]
+            
+            # TODO need to show weakerItemValuation is less than the total for buying all other items
+            
+            # We don't care if this isn't the best item
+            if itemsinauction[rd] != bestItem:
+                return 0
+            
+            # Now need to only bid on that specific artist
+            count = 0
+            for item in itemsinauction[rd:]:
+                if item == bestItem:
+                    count += 1
+            
+            # This is how much we need to divide by
+            return int(standings[mybidderid]['money']/count)
+        
         # TODO need to potentially scale up bids, can calculate over the entire auction
         # This can be summed up at each round by tracking success at each phase
         

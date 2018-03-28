@@ -6,8 +6,8 @@ import time
 
 HOST = "localhost"
 ports = 8060
-numbidders = 4
-numtest = 2
+numbidders = 5
+numtest = 3
 neededtowin = 0
 itemtypes = ['Picasso', 'Van_Gogh', 'Rembrandt', 'Da_Vinci']
 #numitems = {'Picasso': 50, 'Van_Gogh' : 40, 'Rembrandt' : 30, 'Da_Vinci' : 10}
