@@ -280,10 +280,27 @@ class BulwarkClient(object):
 
     def third_bidding_strategy(self, numberbidders, wincondition, artists, values, rd, itemsinauction, winnerarray, winneramount, mybidderid, players, standings, winnerpays):
         """Game 3: Highest total value wins, highest bidder pays own bid, auction order known."""
-
-		
-        # Currently just returns a random bid
-        return int(standings[mybidderid]['money']/(len(itemsinauction)-rd))
+        
+        # TODO need to potentially scale up bids, can calculate over the entire auction
+        # This can be summed up at each round by tracking success at each phase
+        
+        valueLeft = 0
+        for roundItem in itemsinauction[rd:]:
+            # Add up the total value that is left and bid on the amount it's worth out of the remaining budget
+            valueLeft += values[roundItem]
+        
+        # Current items value
+        currentValue = int(standings[mybidderid]['money']*(values[itemsinauction[rd]]/valueLeft))
+        # Might as well overbid by 1 just to beat others if they use the same tactic
+        # It's unlikely we will get every single remaining paintings
+        # Also means 'worthless' (valuated at 0) paintings are still bidded on
+        # Secondary test is just to separate the test in SampleAuction.py
+        if currentValue < standings[mybidderid]['money'] and mybidderid != 'Bulwark2':
+            currentValue += 1
+        
+        # TODO need to decide when it's actually worth overbidding, could cost more than worth
+        
+        return currentValue
 
     def fourth_bidding_strategy(self, numberbidders, wincondition, artists, values, rd, itemsinauction, winnerarray, winneramount, mybidderid, players, standings, winnerpays):
         """Game 4: Highest total value wins, highest bidder pays second highest bid, auction order known."""
