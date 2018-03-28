@@ -139,7 +139,7 @@ class AuctionServer(object):
                     raise IOError
 
         print("Everyone has joined and is ready, let's go!")
-        time.sleep(3)
+        #time.sleep(3)
         self.standings = {name: {artist : 0 for artist in self.itemtypes} for name in self.bidderids}
         for name in self.bidderids:
             self.standings[name]["money"] = self.budget
@@ -173,7 +173,7 @@ class AuctionServer(object):
             #print(bids)
             sorted_bids = list(bids.items())
             sorted_bids.sort(key=lambda x : x[1],reverse=True)
-            time.sleep(2)
+            #time.sleep(2)
             winners = [p for p in sorted_bids if p[1] == sorted_bids[0][1]]
             if winners[0][1] == 0:
                 for conn in self.conns:
@@ -248,6 +248,6 @@ class AuctionServer(object):
             for s in socks:
                 s.send(stringtosend.encode("utf-8"))
 
-        time.sleep(2)
+        #time.sleep(2)
         for conn in self.conns:
             conn.close()
