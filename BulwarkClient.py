@@ -281,22 +281,32 @@ class BulwarkClient(object):
     def third_bidding_strategy(self, numberbidders, wincondition, artists, values, rd, itemsinauction, winnerarray, winneramount, mybidderid, players, standings, winnerpays):
         """Game 3: Highest total value wins, highest bidder pays own bid, auction order known."""
         
+        # TODO the real aim here is decide on the optimal set of items which will earn a majority?
+        # Is it good enough to get maxValue/numberbidders? Not if there are non-rational auctioneers
+        
         # Proof of concept, bidding on only the highest value item will get you to win
         # Does work, even when occasionally losing the item
         if mybidderid == "Bulwark3":
             bestItem = ""
-            weakerItemValuation = 0
             for artist in artists:
                 if bestItem == "":
                     bestItem = artist
                 else:
                     if values[bestItem] < values[artist]:
-                        weakerItemValuation += values[bestItem]
                         bestItem = artist
-                    else:
-                        weakerItemValuation += values[artist]
             
             # TODO need to show weakerItemValuation is less than the total for buying all other items
+            bestItemValuation = 0
+            weakerItemValuation = 0
+            for item in itemsinauction:
+                if item == bestItem:
+                    bestItemValuation += values[item]
+                else:
+                    weakerItemValuation += values[item]
+            
+            # Can only do this if we will make the right amount of value
+            if weakerItemValuation > bestItemValuation: 
+                return self.third_bidding_strategy(numberbidders, wincondition, artists, values, rd, itemsinauction, winnerarray, winneramount, "Bulwark1", players, standings, winnerpays)
             
             # We don't care if this isn't the best item
             if itemsinauction[rd] != bestItem:
