@@ -281,8 +281,9 @@ class BulwarkClient(object):
     def third_bidding_strategy(self, numberbidders, wincondition, artists, values, rd, itemsinauction, winnerarray, winneramount, mybidderid, players, standings, winnerpays):
         """Game 3: Highest total value wins, highest bidder pays own bid, auction order known."""
 
+		
         # Currently just returns a random bid
-        return self.random_bid(standings[mybidderid]['money'])
+        return int(standings[mybidderid]['money']/(len(itemsinauction)-rd))
 
     def fourth_bidding_strategy(self, numberbidders, wincondition, artists, values, rd, itemsinauction, winnerarray, winneramount, mybidderid, players, standings, winnerpays):
         """Game 4: Highest total value wins, highest bidder pays second highest bid, auction order known."""
