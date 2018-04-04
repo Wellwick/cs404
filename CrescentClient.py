@@ -2,7 +2,7 @@ import socket
 import random
 
 
-class BulwarkClient(object):
+class CrescentClient(object):
     """A client for bidding with the AuctionRoom"""
     def __init__(self, host="localhost", port=8020, mybidderid=None, verbose=False):        
         # Default init info
@@ -283,64 +283,55 @@ class BulwarkClient(object):
         
         # TODO the real aim here is decide on the optimal set of items which will earn a majority?
         # Is it good enough to get maxValue/numberbidders? Not if there are non-rational auctioneers
+        # Can also be a problem with cooperative clients against this bot
         
-        # Proof of concept, bidding on only the highest value item will get you to win
-        # Does work, even when occasionally losing the item
-        if mybidderid == "Bulwark3":
-            bestItem = ""
-            for artist in artists:
-                if bestItem == "":
-                    bestItem = artist
+        # Need to sum the total valuation for an accurate representation of what the majority is
+        totalValue = 0
+        for item in itemsinauction:
+            totalValue += values[item]
+        
+        # Looking for the majority of valuated points
+        aimedValue = int(totalValue/2)+1
+        # Make sure to keep track of what the maximum and minimum value bounds we shouldn't pass over
+        upperValueCap = aimedValue
+        lowerValueCap = int(totalValue/len(players))+1
+        
+        currentVal = 0
+        #for artist in artists:
+        #    currentVal += standings[mybidderid][artist]*values[artist]
+        
+        # Need to scale the valuation based on previous round successes
+        # We don't have previously bidded values, so we can only look at who won
+        # And estimate what we bidded at the time
+        previousRoundSuccess = False
+        currentBudget = self.maxbudget
+        for round, item in enumerate(itemsinauction[:rd+1]):
+            itemWorth = int((values[item]/(aimedValue-currentVal))*currentBudget)
+            
+            if round == rd:
+                return itemWorth
+            
+            if (winnerarray[round] == mybidderid):
+                currentBudget -= winneramount[round]
+                currentVal += values[item]
+                if previousRoundSuccess:
+                    # Scale up aimedValue because of two successes in a row!
+                    aimedValue /= 0.85
+                    previousRoundSuccess = False
+                    if aimedValue > upperValueCap:
+                        aimedValue = upperValueCap
                 else:
-                    if values[bestItem] < values[artist]:
-                        bestItem = artist
-            
-            # TODO need to show weakerItemValuation is less than the total for buying all other items
-            bestItemValuation = 0
-            weakerItemValuation = 0
-            for item in itemsinauction:
-                if item == bestItem:
-                    bestItemValuation += values[item]
-                else:
-                    weakerItemValuation += values[item]
-            
-            # Can only do this if we will make the right amount of value
-            if weakerItemValuation > bestItemValuation: 
-                return self.third_bidding_strategy(numberbidders, wincondition, artists, values, rd, itemsinauction, winnerarray, winneramount, "Bulwark1", players, standings, winnerpays)
-            
-            # We don't care if this isn't the best item
-            if itemsinauction[rd] != bestItem:
-                return 0
-            
-            # Now need to only bid on that specific artist
-            count = 0
-            for item in itemsinauction[rd:]:
-                if item == bestItem:
-                    count += 1
-            
-            # This is how much we need to divide by
-            return int(standings[mybidderid]['money']/count)
+                    previousRoundSuccess = True
+            else:
+                # Since we lost this round, scale down aimedValue if we tried to win the item
+                if itemWorth != 0:
+                    aimedValue *= 0.85
+                    previousRoundSuccess = False
+                    if aimedValue < lowerValueCap:
+                        aimedValue = lowerValueCap
         
-        # TODO need to potentially scale up bids, can calculate over the entire auction
-        # This can be summed up at each round by tracking success at each phase
         
-        valueLeft = 0
-        for roundItem in itemsinauction[rd:]:
-            # Add up the total value that is left and bid on the amount it's worth out of the remaining budget
-            valueLeft += values[roundItem]
         
-        # Current items value
-        currentValue = int(standings[mybidderid]['money']*(values[itemsinauction[rd]]/valueLeft))
-        # Might as well overbid by 1 just to beat others if they use the same tactic
-        # It's unlikely we will get every single remaining paintings
-        # Also means 'worthless' (valuated at 0) paintings are still bidded on
-        # Secondary test is just to separate the test in SampleAuction.py
-        if currentValue < standings[mybidderid]['money'] and mybidderid != 'Bulwark2':
-            currentValue += 1
-        
-        # TODO need to decide when it's actually worth overbidding, could cost more than worth
-        
-        return currentValue
 
     def fourth_bidding_strategy(self, numberbidders, wincondition, artists, values, rd, itemsinauction, winnerarray, winneramount, mybidderid, players, standings, winnerpays):
         """Game 4: Highest total value wins, highest bidder pays second highest bid, auction order known."""
