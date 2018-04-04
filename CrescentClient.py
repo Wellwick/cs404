@@ -303,9 +303,14 @@ class CrescentClient(object):
         # Need to scale the valuation based on previous round successes
         # We don't have previously bidded values, so we can only look at who won
         # And estimate what we bidded at the time
-        previousRoundSuccess = False
+        # TODO need to take into consideration of remaining value
         currentBudget = self.maxbudget
+        remainingValue = totalValue
         for round, item in enumerate(itemsinauction[:rd+1]):
+            # If we are aiming to reach a value higher than what is left, let's just aim for everything!
+            if (aimedValue-currentVal) > remainingValue:
+                aimedValue = remainingValue+currentVal
+            
             itemWorth = int((values[item]/(aimedValue-currentVal))*currentBudget)
             
             if round == rd:
@@ -314,21 +319,18 @@ class CrescentClient(object):
             if (winnerarray[round] == mybidderid):
                 currentBudget -= winneramount[round]
                 currentVal += values[item]
-                if previousRoundSuccess:
-                    # Scale up aimedValue because of two successes in a row!
-                    aimedValue /= 0.85
-                    previousRoundSuccess = False
-                    if aimedValue > upperValueCap:
-                        aimedValue = upperValueCap
-                else:
-                    previousRoundSuccess = True
+                # Scale up aimedValue because of success
+                aimedValue /= 0.9
+                if aimedValue > upperValueCap:
+                    aimedValue = upperValueCap
             else:
                 # Since we lost this round, scale down aimedValue if we tried to win the item
                 if itemWorth != 0:
-                    aimedValue *= 0.85
-                    previousRoundSuccess = False
+                    aimedValue *= 0.75
                     if aimedValue < lowerValueCap:
                         aimedValue = lowerValueCap
+            
+            remainingValue -= values[item]
         
         
         
