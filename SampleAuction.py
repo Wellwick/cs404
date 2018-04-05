@@ -50,14 +50,17 @@ if __name__=='__main__':
      bidbots = []
      for i in range(numbidders):
          p = ports + i
+         type = 2
          if i == 0:
             name = "Crescent"
+            type = 0
          elif i < numtest:
              name = "Bulwark" + str(i)
+             type = 1
          else:
              name = "Bidbot" + str(i+1-numtest)
          print("Starting AuctionClient on port %d with name %s" % (p, name))
-         b = Process(target = run_client, args = (p, name, verbose, i < numtest))
+         b = Process(target = run_client, args = (p, name, verbose, type))
          bidbots.append(b)
          b.start()
          time.sleep(1)

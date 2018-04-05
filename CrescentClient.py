@@ -299,13 +299,14 @@ class CrescentClient(object):
         for item in itemsinauction:
             totalValue += values[item]
         
-        # Looking for the majority of valuated points
-        if self.aimedValue == 0:
-            self.aimedValue = int(totalValue/2)+1
-        aimedValue = self.aimedValue
+        
         # Make sure to keep track of what the maximum and minimum value bounds we shouldn't pass over
         upperValueCap = int(totalValue/2)+1
         lowerValueCap = int(totalValue/len(players))+1
+        # Looking for the majority of valuated points
+        if self.aimedValue == 0:
+            self.aimedValue = upperValueCap
+        aimedValue = self.aimedValue
         
         # If this isn't the first round, scale the aimedValue dependent on previous rounds success
         if rd != 0 and self.roundBids[rd-1] != 0:
@@ -335,10 +336,13 @@ class CrescentClient(object):
             nextPlace = False
             for art in artists:
                 if ((nextPlace == False 
-                and not (art in itemsInValuedOrder))
-                or values[nextPlace] < values[art]):
+                or values[nextPlace] < values[art])
+                and not (art in itemsInValuedOrder)):
                     nextPlace = art
             itemsInValuedOrder.append(nextPlace)
+        
+        if rd == 0:
+            print(itemsInValuedOrder)
         
         # If we are already at the aimed value, see if we can't get a little bit more item wise
         if currentVal >= aimedValue:
@@ -348,7 +352,7 @@ class CrescentClient(object):
         
         # Step through future rounds looking for highest value items first
         targetVal = aimedValue
-        for artist in itemsInValuedOrder:
+        for index, artist in enumerate(itemsInValuedOrder):
             for item in itemsinauction[rd:]:
                 # Break if we have reached the target value
                 if targetVal < currentVal:
