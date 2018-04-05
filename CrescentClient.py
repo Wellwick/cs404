@@ -283,6 +283,9 @@ class CrescentClient(object):
     def third_bidding_strategy(self, numberbidders, wincondition, artists, values, rd, itemsinauction, winnerarray, winneramount, mybidderid, players, standings, winnerpays):
         """Game 3: Highest total value wins, highest bidder pays own bid, auction order known."""
         
+        # Exit early if we have no budget
+        if standings[mybidderid]['money'] == 0: return 0
+        
         # TODO the real aim here is decide on the optimal set of items which will earn a majority?
         # Is it good enough to get maxValue/numberbidders? Not if there are non-rational auctioneers
         # Can also be a problem with cooperative clients against this bot
@@ -304,47 +307,66 @@ class CrescentClient(object):
         upperValueCap = int(totalValue/2)+1
         lowerValueCap = int(totalValue/len(players))+1
         
-        currentVal = 0
-        #for artist in artists:
-        #    currentVal += standings[mybidderid][artist]*values[artist]
-        
-        # Need to scale the valuation based on previous round successes
-        # We don't have previously bidded values, so we can only look at who won
-        # And estimate what we bidded at the time
-        # TODO need to take into consideration of remaining value
-        currentBudget = self.maxbudget
-        remainingValue = totalValue
-        for round, item in enumerate(itemsinauction[:rd+1]):
-            # If we are aiming to reach a value higher than what is left, let's just aim for everything!
-            if (aimedValue-currentVal) > remainingValue:
-                aimedValue = remainingValue+currentVal
-            
-            itemWorth = int((values[item]/(aimedValue-currentVal))*currentBudget)
-            
-            if round == rd:
-                self.roundBids.append(itemWorth)
-                self.aimedValue = aimedValue
-                return itemWorth
-            
-            if (winnerarray[round] == mybidderid):
-                currentBudget -= winneramount[round]
-                currentVal += values[item]
-                # Scale up aimedValue because of success
+        # If this isn't the first round, scale the aimedValue dependent on previous rounds success
+        if rd != 0 and self.roundBids[rd-1] != 0:
+            if winnerarray[rd-1] == mybidderid:
                 aimedValue /= 0.9
                 if aimedValue > upperValueCap:
                     aimedValue = upperValueCap
             else:
-                # Since we lost this round, scale down aimedValue if we tried to win the item
-                if self.roundBids[round] != 0:
-                    aimedValue *= 0.75
-                    if aimedValue < lowerValueCap:
-                        aimedValue = lowerValueCap
+                aimedValue *= 0.75
+                if aimedValue < lowerValueCap:
+                    aimedValue = lowerValueCap
+        
+        # Need to scale the valuation based on previous round successes
+        # We don't have previously bidded values, so we can only look at who won
+        # And estimate what we bidded at the time
+        currentBudget = self.maxbudget
+        remainingValue = totalValue
+        targetItems = {}
+        itemsInValuedOrder = []
+        currentVal = 0
+        for artist in artists:
+            targetItems[artist] = 0
+            currentVal += standings[mybidderid][artist]*values[artist]
             
-            remainingValue -= values[item]
+        # Loop over and order items in descending value order with an insertion sort
+        for artist in artists:
+            nextPlace = False
+            for art in artists:
+                if ((nextPlace == False 
+                and not (art in itemsInValuedOrder))
+                or values[nextPlace] < values[art]):
+                    nextPlace = art
+            itemsInValuedOrder.append(nextPlace)
         
+        # If we are already at the aimed value, see if we can't get a little bit more item wise
+        if currentVal >= aimedValue:
+            aimedValue /= 0.9
+            if aimedValue > upperValueCap:
+                aimedValue = upperValueCap
         
+        # Step through future rounds looking for highest value items first
+        targetVal = aimedValue
+        for artist in itemsInValuedOrder:
+            for item in itemsinauction[rd:]:
+                # Break if we have reached the target value
+                if targetVal < currentVal:
+                    break
+                elif artist == item:
+                    targetItems[artist] += 1
+                    targetVal -= values[artist]
+            
+        itemWorth = 0
+        # Only bid if this item is in our bid set
+        if targetItems[itemsinauction[rd]] > 0:
+            itemWorth = int((values[item]/(aimedValue-currentVal))*currentBudget)
+            
         
-
+        self.roundBids.append(itemWorth)
+        self.aimedValue = aimedValue
+        return itemWorth
+        
     def fourth_bidding_strategy(self, numberbidders, wincondition, artists, values, rd, itemsinauction, winnerarray, winneramount, mybidderid, players, standings, winnerpays):
         """Game 4: Highest total value wins, highest bidder pays second highest bid, auction order known."""
 
