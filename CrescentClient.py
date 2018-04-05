@@ -7,6 +7,8 @@ class CrescentClient(object):
     def __init__(self, host="localhost", port=8020, mybidderid=None, verbose=False):        
         # Default init info
         self.verbose = verbose
+        self.roundBids = []
+        self.aimedValue = 0
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((host,port))
         forbidden_chars = set(""" '".,;:{}[]()""")
@@ -285,15 +287,21 @@ class CrescentClient(object):
         # Is it good enough to get maxValue/numberbidders? Not if there are non-rational auctioneers
         # Can also be a problem with cooperative clients against this bot
         
+        # TODO need to decide the set of items we want to buy
+        # Need to minimise the amount of items we need to buy, to minimise chance of losing
+        # Want to take the largest items, as priority, then the smaller items in descending order
+        
         # Need to sum the total valuation for an accurate representation of what the majority is
         totalValue = 0
         for item in itemsinauction:
             totalValue += values[item]
         
         # Looking for the majority of valuated points
-        aimedValue = int(totalValue/2)+1
+        if self.aimedValue == 0:
+            self.aimedValue = int(totalValue/2)+1
+        aimedValue = self.aimedValue
         # Make sure to keep track of what the maximum and minimum value bounds we shouldn't pass over
-        upperValueCap = aimedValue
+        upperValueCap = int(totalValue/2)+1
         lowerValueCap = int(totalValue/len(players))+1
         
         currentVal = 0
@@ -314,6 +322,8 @@ class CrescentClient(object):
             itemWorth = int((values[item]/(aimedValue-currentVal))*currentBudget)
             
             if round == rd:
+                self.roundBids.append(itemWorth)
+                self.aimedValue = aimedValue
                 return itemWorth
             
             if (winnerarray[round] == mybidderid):
@@ -325,7 +335,7 @@ class CrescentClient(object):
                     aimedValue = upperValueCap
             else:
                 # Since we lost this round, scale down aimedValue if we tried to win the item
-                if itemWorth != 0:
+                if self.roundBids[round] != 0:
                     aimedValue *= 0.75
                     if aimedValue < lowerValueCap:
                         aimedValue = lowerValueCap
