@@ -346,4 +346,4 @@ class BulwarkClient(object):
         """Game 4: Highest total value wins, highest bidder pays second highest bid, auction order known."""
 
         # Already shown that bidding the personal valuation is a dominant strategy
-        return self.third_bidding_strategy(self, numberbidders, wincondition, artists, values, rd, itemsinauction, winnerarray, winneramount, mybidderid, players, standings, winnerpays)
+        return self.third_bidding_strategy(numberbidders, wincondition, artists, values, rd, itemsinauction, winnerarray, winneramount, mybidderid, players, standings, winnerpays)
