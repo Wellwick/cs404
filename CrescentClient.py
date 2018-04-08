@@ -4,11 +4,13 @@ import random
 
 class CrescentClient(object):
     """A client for bidding with the AuctionRoom"""
-    def __init__(self, host="localhost", port=8020, mybidderid=None, verbose=False):        
+    def __init__(self, host="localhost", port=8020, mybidderid=None, verbose=False, scaleUp=0.9, scaleDown=0.7):        
         # Default init info
         self.verbose = verbose
         self.roundBids = []
         self.aimedValue = 0
+        self.scaleUp = scaleUp
+        self.scaleDown = scaleDown
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((host,port))
         forbidden_chars = set(""" '".,;:{}[]()""")
@@ -311,11 +313,11 @@ class CrescentClient(object):
         # If this isn't the first round, scale the aimedValue dependent on previous rounds success
         if rd != 0 and self.roundBids[rd-1] != 0:
             if winnerarray[rd-1] == mybidderid:
-                aimedValue /= 0.9
+                aimedValue /= self.scaleUp
                 if aimedValue > upperValueCap:
                     aimedValue = upperValueCap
             else:
-                aimedValue *= 0.75
+                aimedValue *= self.scaleDown
                 if aimedValue < lowerValueCap:
                     aimedValue = lowerValueCap
         
@@ -341,12 +343,12 @@ class CrescentClient(object):
                     nextPlace = art
             itemsInValuedOrder.append(nextPlace)
         
-        if rd == 0:
-            print(itemsInValuedOrder)
+        #if rd == 0:
+            #print(itemsInValuedOrder)
         
         # If we are already at the aimed value, see if we can't get a little bit more item wise
         if currentVal >= aimedValue:
-            aimedValue /= 0.9
+            aimedValue /= self.scaleUp
             if aimedValue > upperValueCap:
                 aimedValue = upperValueCap
         
