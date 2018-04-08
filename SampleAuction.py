@@ -9,14 +9,14 @@ HOST = "localhost"
 ports = 8060
 numbidders = 6
 numtest = 4
-neededtowin = 3
+neededtowin = 0
 itemtypes = ['Picasso', 'Van_Gogh', 'Rembrandt', 'Da_Vinci']
 #numitems = {'Picasso': 50, 'Van_Gogh' : 40, 'Rembrandt' : 30, 'Da_Vinci' : 10}
 numitems = {}
 auction_size = 200
 budget = 1000
 values = {'Picasso': 1, 'Van_Gogh' : 5, 'Rembrandt' : 10, 'Da_Vinci' : 20}
-announce_order = False
+announce_order = True
 winner_pays = 0
 
 args = (HOST, ports, numbidders, neededtowin, itemtypes, numitems, auction_size, budget, values, announce_order, winner_pays

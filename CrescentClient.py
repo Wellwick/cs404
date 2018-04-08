@@ -281,12 +281,14 @@ class CrescentClient(object):
             # It is now impossible to win!
             # Let's try and force a draw
             # Prevention is a last ditch effort, since we lose value when bidding on something we don't want
+            highest = 0
             for player in players:
                 # We already know we are not a player who can win
-                if standings[player][curr_item] == 2:
+                if standings[player][curr_item] == 2 and highest < standings[player]['money'] + 1:
                     # Try and bid more than them!
-                    return standings[player]['money'] + 1
-        
+                    highest = standings[player]['money'] + 1
+            
+            return highest
         
     def second_bidding_strategy(self, numberbidders, wincondition, artists, values, rd, itemsinauction, winnerarray, winneramount, mybidderid, players, standings, winnerpays):
         """Game 2: First to buy wincondition of any artist wins, highest bidder pays own bid, auction order not known."""
@@ -303,13 +305,27 @@ class CrescentClient(object):
             artistValuation[roundItem] -= 1
         
         dropOff = 1
+        possibleWin = False
         # Really, we want to value ones we've already got some of much higher!
         for ownedItem in artists:
+            # Check if it is possible to win with this type
+            if artistValuation[ownedItem] + standings[mybidderid][ownedItem] >= wincondition:
+                possibleWin = True
             artistValuation[ownedItem] *= standings[mybidderid][ownedItem]+1
             if standings[mybidderid][ownedItem] > 0:
                 dropOff = 0.05
                 
         curr_item = itemsinauction[rd]
+        
+        # Before we go further, make sure we can actually win
+        if possibleWin == False:
+            # Bid if someone else might win anyway
+            highest = 0
+            for player in players:
+                if standings[player][curr_item] == 2 and highest < standings[player]['money']+1:
+                    highest = standings[player]['money']+1
+            
+            return highest
         
         # Make sure we are making the best choice
         bestChoice = [curr_item, artistValuation[curr_item]]
