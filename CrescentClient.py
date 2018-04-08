@@ -229,7 +229,8 @@ class CrescentClient(object):
             if bid > 0 and winnerarray[round] != mybidderid:
                 lenience += 0.5
             if bid > 0 and winnerarray[round] == mybidderid:
-                lenience -= 0.5
+                # Bring leniency down drastically because we want to focus on the purchased items 
+                lenience = 0
         
         
         # TODO need to factor in previous buys from other bidders
@@ -259,7 +260,34 @@ class CrescentClient(object):
                     self.roundBids.append(int(standings[mybidderid]['money']*otherItem/3))
                     return int(standings[mybidderid]['money']*otherItem/3)
         
-
+        # If we reach this point, it may now be impossible to win
+        bestCase = artists[0]
+        for artist in artists:
+            thisVal = artistValuation[artist]+standings[mybidderid][artist]
+            if artistValuation[bestCase]+standings[mybidderid][bestCase] < thisVal:
+                bestCase = artist
+            
+        if artistValuation[bestCase]+standings[mybidderid][bestCase] >= wincondition:
+            if curr_item == bestCase:
+                return 0
+            # If it's still possible to win, let's bid on this!
+            if standings[mybidderid][bestCase] == 2:
+                return standings[mybidderid]['money']
+            elif standings[mybidderid][bestCase] == 1:
+                return int(standings[mybidderid]['money']/2)
+            else:
+                return int(standings[mybidderid]['money']/3)
+        else:
+            # It is now impossible to win!
+            # Let's try and force a draw
+            # Prevention is a last ditch effort, since we lose value when bidding on something we don't want
+            for player in players:
+                # We already know we are not a player who can win
+                if standings[player][curr_item] == 2:
+                    # Try and bid more than them!
+                    return standings[player]['money'] + 1
+        
+        
     def second_bidding_strategy(self, numberbidders, wincondition, artists, values, rd, itemsinauction, winnerarray, winneramount, mybidderid, players, standings, winnerpays):
         """Game 2: First to buy wincondition of any artist wins, highest bidder pays own bid, auction order not known."""
         

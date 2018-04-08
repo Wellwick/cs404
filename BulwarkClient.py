@@ -236,6 +236,7 @@ class BulwarkClient(object):
                 else:
                     return int(standings[mybidderid]['money']/3)
         
+        return self.random_bid(standings[mybidderid]['money'])
 
     def second_bidding_strategy(self, numberbidders, wincondition, artists, values, rd, itemsinauction, winnerarray, winneramount, mybidderid, players, standings, winnerpays):
         """Game 2: First to buy wincondition of any artist wins, highest bidder pays own bid, auction order not known."""
