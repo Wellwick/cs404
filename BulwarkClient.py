@@ -223,7 +223,7 @@ class BulwarkClient(object):
         for roundItem in itemsinauction[rd:]:
             artistValuation[roundItem] += 1
             # TODO Could find a way to factor in number of bidders 
-            if artistValuation[roundItem] - standings[mybidderid][roundItem] >= wincondition:
+            if artistValuation[roundItem] + standings[mybidderid][roundItem] >= wincondition:
                 # This means we want to follow the path to this item type and ignore others
                 if curr_item != roundItem:
                     return 0

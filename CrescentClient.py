@@ -222,23 +222,42 @@ class CrescentClient(object):
         
         curr_item = itemsinauction[rd]
         
+        lenience = 0
+        
+        # Calculate how much we are struggling
+        for round, bid in enumerate(self.roundBids):
+            if bid > 0 and winnerarray[round] != mybidderid:
+                lenience += 0.5
+            if bid > 0 and winnerarray[round] == mybidderid:
+                lenience -= 0.5
+        
+        
         # TODO need to factor in previous buys from other bidders
         # Know the order of auctioned items, so we can bid on the ones we think are most likely to win for us early
         for roundItem in itemsinauction[rd:]:
             artistValuation[roundItem] += 1
             # TODO Could find a way to factor in number of bidders 
-            if artistValuation[roundItem] - standings[mybidderid][roundItem] >= wincondition:
+            if artistValuation[roundItem] + lenience >= wincondition or standings[mybidderid][roundItem] > 0:
                 # This means we want to follow the path to this item type and ignore others
+                otherItem = 1
+                for artist in artists:
+                    if standings[mybidderid][artist] > 0 and artist != roundItem:
+                        otherItem = 0.05
+                
                 if curr_item != roundItem:
+                    self.roundBids.append(0)
                     return 0
                 # If we own 2 of this item already, we want to go all in
                 if standings[mybidderid][curr_item] == 2:
+                    self.roundBids.append(standings[mybidderid]['money'])
                     return standings[mybidderid]['money']
                 # If we own 1 of these already, let's try spending half our money on it!
                 if standings[mybidderid][curr_item] == 1:
-                    return int(standings[mybidderid]['money']/2)
+                    self.roundBids.append(int(standings[mybidderid]['money']*otherItem/2))
+                    return int(standings[mybidderid]['money']*otherItem/2)
                 else:
-                    return int(standings[mybidderid]['money']/3)
+                    self.roundBids.append(int(standings[mybidderid]['money']*otherItem/3))
+                    return int(standings[mybidderid]['money']*otherItem/3)
         
 
     def second_bidding_strategy(self, numberbidders, wincondition, artists, values, rd, itemsinauction, winnerarray, winneramount, mybidderid, players, standings, winnerpays):
@@ -365,7 +384,8 @@ class CrescentClient(object):
             
         itemWorth = 0
         # Only bid if this item is in our bid set
-        if targetItems[itemsinauction[rd]] > 0:
+        # Shouldn't bid if we have already reached our aimed for value
+        if targetItems[itemsinauction[rd]] > 0 and aimedValue != currentVal:
             itemWorth = int((values[item]/(aimedValue-currentVal))*currentBudget)
             
         
