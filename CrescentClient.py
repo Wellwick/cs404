@@ -302,10 +302,12 @@ class CrescentClient(object):
         for roundItem in itemsinauction[:rd]:
             artistValuation[roundItem] -= 1
         
+        dropOff = 1
         # Really, we want to value ones we've already got some of much higher!
-        for ownedItem in standings[mybidderid]:
-            if ownedItem != 'money':
-                artistValuation[ownedItem] *= (standings[mybidderid][ownedItem]+1)
+        for ownedItem in artists:
+            artistValuation[ownedItem] *= standings[mybidderid][ownedItem]+1
+            if standings[mybidderid][ownedItem] > 0:
+                dropOff = 0.05
                 
         curr_item = itemsinauction[rd]
         
@@ -317,17 +319,17 @@ class CrescentClient(object):
                 bestChoice[1] = artistValuation[artist]
                 
         # Now actually make the bid
-        if bestChoice[0] != curr_item:
-            return 0
+        # If we own 2 of this item already, we want to go all in
+        if standings[mybidderid][curr_item] == 2:
+            return standings[mybidderid]['money']
+        # If we own 1 of these already, let's try spending half our money on it!
+        elif standings[mybidderid][curr_item] == 1:
+            return int(standings[mybidderid]['money']/2)
+        # Bid on it no matter what if we haven't bidded on anything
+        elif bestChoice[0] == curr_item or dropOff == 1:
+            return int(standings[mybidderid]['money']*dropOff/3)
         else:
-            # If we own 2 of this item already, we want to go all in
-            if standings[mybidderid][curr_item] == 2:
-                return standings[mybidderid]['money']
-            # If we own 1 of these already, let's try spending half our money on it!
-            if standings[mybidderid][curr_item] == 1:
-                return int(standings[mybidderid]['money']/2)
-            else:
-                return int(standings[mybidderid]['money']/3)
+            return 0
 
     def third_bidding_strategy(self, numberbidders, wincondition, artists, values, rd, itemsinauction, winnerarray, winneramount, mybidderid, players, standings, winnerpays):
         """Game 3: Highest total value wins, highest bidder pays own bid, auction order known."""
