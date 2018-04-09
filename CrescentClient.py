@@ -242,7 +242,7 @@ class CrescentClient(object):
                 # This means we want to follow the path to this item type and ignore others
                 otherItem = 1
                 for artist in artists:
-                    if standings[mybidderid][artist] > 0 and artist != roundItem:
+                    if standings[mybidderid][artist] > 0 and artist != roundItem and len(players) > len(artists):
                         otherItem = 0.05
                 
                 if curr_item != roundItem:
@@ -312,7 +312,8 @@ class CrescentClient(object):
             if artistValuation[ownedItem] + standings[mybidderid][ownedItem] >= wincondition:
                 possibleWin = True
             artistValuation[ownedItem] *= standings[mybidderid][ownedItem]+1
-            if standings[mybidderid][ownedItem] > 0:
+            # Only have drop off when there is more players than artists
+            if standings[mybidderid][ownedItem] > 0 and len(players) > len(artists):
                 dropOff = 0.05
                 
         curr_item = itemsinauction[rd]
