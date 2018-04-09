@@ -2,7 +2,7 @@ import socket
 import random
 
 
-class CrescentClient(object):
+class AuctionClient(object):
     """A client for bidding with the AuctionRoom"""
     def __init__(self, host="localhost", port=8020, mybidderid=None, verbose=False, scaleUp=0.9, scaleDown=0.7):        
         # Default init info
