@@ -11,6 +11,7 @@ class CrescentClient(object):
         self.aimedValue = 0
         self.scaleUp = scaleUp
         self.scaleDown = scaleDown
+        self.aggression = 1.1
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((host,port))
         forbidden_chars = set(""" '".,;:{}[]()""")
@@ -243,7 +244,7 @@ class CrescentClient(object):
                 otherItem = 1
                 for artist in artists:
                     if standings[mybidderid][artist] > 0 and artist != roundItem and len(players) > len(artists):
-                        otherItem = 0.05
+                        otherItem = 0.1
                 
                 if curr_item != roundItem:
                     self.roundBids.append(0)
@@ -444,4 +445,14 @@ class CrescentClient(object):
         """Game 4: Highest total value wins, highest bidder pays second highest bid, auction order known."""
 
         # Already shown that bidding the personal valuation is a dominant strategy
-        return self.third_bidding_strategy(numberbidders, wincondition, artists, values, rd, itemsinauction, winnerarray, winneramount, mybidderid, players, standings, winnerpays)
+        value = self.third_bidding_strategy(numberbidders, wincondition, artists, values, rd, itemsinauction, winnerarray, winneramount, mybidderid, players, standings, winnerpays)
+        if rd > 0 and self.roundBids[rd-1] > 0:
+            if winnerarray[rd-1] == mybidderid:
+                self.aggression /= 1.1
+                if self.aggression < 1.1:
+                    self.aggression = 1.1
+            else:
+                self.aggression *= 1.1
+        
+        self.roundBids[rd] *= 1.1
+        return int(value * 1.1)
