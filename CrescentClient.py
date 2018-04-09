@@ -389,8 +389,6 @@ class CrescentClient(object):
                     aimedValue = lowerValueCap
         
         # Need to scale the valuation based on previous round successes
-        # We don't have previously bidded values, so we can only look at who won
-        # And estimate what we bidded at the time
         currentBudget = self.maxbudget
         remainingValue = totalValue
         targetItems = {}
@@ -447,12 +445,11 @@ class CrescentClient(object):
         # Already shown that bidding the personal valuation is a dominant strategy
         value = self.third_bidding_strategy(numberbidders, wincondition, artists, values, rd, itemsinauction, winnerarray, winneramount, mybidderid, players, standings, winnerpays)
         if rd > 0 and self.roundBids[rd-1] > 0:
+            # Figure out how aggressive we should be on top of the third strategy
             if winnerarray[rd-1] == mybidderid:
-                self.aggression /= 1.1
-                if self.aggression < 1.1:
-                    self.aggression = 1.1
+                self.aggression = 1.1
             else:
                 self.aggression *= 1.1
         
-        self.roundBids[rd] *= 1.1
-        return int(value * 1.1)
+        self.roundBids[rd] *= self.aggression
+        return int(value * self.aggression)
