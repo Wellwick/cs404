@@ -353,7 +353,9 @@ class CrescentClient(object):
         """Game 3: Highest total value wins, highest bidder pays own bid, auction order known."""
         
         # Exit early if we have no budget
-        if standings[mybidderid]['money'] == 0: return 0
+        if standings[mybidderid]['money'] == 0: 
+            self.roundBids.append(0)
+            return 0
         
         # TODO the real aim here is decide on the optimal set of items which will earn a majority?
         # Is it good enough to get maxValue/numberbidders? Not if there are non-rational auctioneers
@@ -444,6 +446,27 @@ class CrescentClient(object):
 
         # Already shown that bidding the personal valuation is a dominant strategy
         value = self.third_bidding_strategy(numberbidders, wincondition, artists, values, rd, itemsinauction, winnerarray, winneramount, mybidderid, players, standings, winnerpays)
+        
+        """
+        
+        myVal = 0
+        for artist in artists:
+            myVal += standings[mybidderid][artist]*values[artist]
+        
+        worstCase = 0
+        for player in players:
+            value = 0
+            for artist in artists:
+                value += standings[player][artist]*values[artist]
+            if value > worstCase:
+                worstCase = value
+                
+        if worstCase > myVal and myVal != 0:
+            self.roundBids[rd] *= (worstCase/myVal)
+            return int(value * (worstCase/myVal))
+        
+        """
+        
         if rd > 0 and self.roundBids[rd-1] > 0:
             # Figure out how aggressive we should be on top of the third strategy
             if winnerarray[rd-1] == mybidderid:
